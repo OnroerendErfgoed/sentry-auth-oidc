@@ -6,12 +6,11 @@ TOKEN_ENDPOINT = getattr(settings, "OIDC_TOKEN_ENDPOINT", None)
 CLIENT_ID = getattr(settings, "OIDC_CLIENT_ID", None)
 CLIENT_SECRET = getattr(settings, "OIDC_CLIENT_SECRET", None)
 USERINFO_ENDPOINT = getattr(settings, "OIDC_USERINFO_ENDPOINT", None)
+USERINFO_NAME_CLAIM = getattr(settings, "OIDC_USERINFO_NAME_CLAIM", "name")
 SCOPE = getattr(settings, "OIDC_SCOPE", "openid email")
 REQUIRED_CLAIM = getattr(settings, "OIDC_REQUIRED_CLAIM", None)
 WELL_KNOWN_SCHEME = "/.well-known/openid-configuration"
-ERR_INVALID_RESPONSE = (
-    "Unable to fetch user information from provider.  Please check the log."
-)
+ERR_INVALID_RESPONSE = "Unable to fetch user information from provider.  Please check the log."
 ISSUER = None
 
 DATA_VERSION = "1"
@@ -30,3 +29,6 @@ if OIDC_DOMAIN:
 config_issuer = getattr(settings, "OIDC_ISSUER", None)
 if config_issuer:
     ISSUER = config_issuer
+
+# Provider name for display in the Sentry UI.
+PROVIDER_NAME = getattr(settings, "OIDC_PROVIDER_NAME", None) or ISSUER or "OIDC"

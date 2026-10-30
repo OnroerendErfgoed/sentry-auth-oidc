@@ -1,12 +1,10 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 
-from django.http import HttpRequest
-
-import time
-
 import requests
+from django.http import HttpRequest
 from sentry.auth.provider import MigratingIdentityId
 from sentry.auth.providers.oauth2 import OAuth2Callback, OAuth2Login, OAuth2Provider
 from sentry.auth.services.auth.model import RpcAuthProvider
@@ -18,10 +16,11 @@ from .constants import (
     CLIENT_ID,
     CLIENT_SECRET,
     DATA_VERSION,
-    ISSUER,
+    PROVIDER_NAME,
     SCOPE,
     TOKEN_ENDPOINT,
     USERINFO_ENDPOINT,
+    USERINFO_NAME_CLAIM,
 )
 from .views import FetchUser, oeidc_configure_view
 
@@ -46,7 +45,7 @@ class OEIDCLogin(OAuth2Login):
 
 
 class OEIDCProvider(OAuth2Provider):
-    name = ISSUER
+    name = PROVIDER_NAME
     key = "oeidc"
 
     def __init__(self, domain=None, domains=None, version=None, **config):
@@ -60,10 +59,7 @@ class OEIDCProvider(OAuth2Provider):
         # this is a bit complex in Sentry's SSO implementation as we don't
         # provide a great way to get initial state for new setup pipelines
         # vs missing state in case of migrations.
-        if domains is None:
-            version = DATA_VERSION
-        else:
-            version = None
+        version = DATA_VERSION if domains is None else None
         self.version = version
         super().__init__(**config)
 
@@ -100,7 +96,7 @@ class OEIDCProvider(OAuth2Provider):
         bearer_auth = "Bearer " + bearer_token
         retry_codes = [429, 500, 502, 503, 504]
         for retry in range(10):
-            if 10 < retry:
+            if retry > 10:
                 return {}
             r = requests.get(
                 endpoint + "?schema=openid",
@@ -128,7 +124,7 @@ class OEIDCProvider(OAuth2Provider):
         return {
             "id": user_id,
             "email": user_info.get("email"),
-            "name": user_info.get("name"),
+            "name": user_info.get(USERINFO_NAME_CLAIM),
             "data": self.get_oauth_data(data),
             "email_verified": user_info.get("email_verified"),
         }
