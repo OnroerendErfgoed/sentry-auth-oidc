@@ -49,13 +49,13 @@ class FetchUser(AuthView):
                 REQUIRED_CLAIM,
             ):
                 logger.error("Required claim %s not available" % REQUIRED_CLAIM)
-                return helper.error(ERR_INVALID_RESPONSE)
+                return pipeline.error(ERR_INVALID_RESPONSE)
         except Exception as e:
             logger.exception(e)
             logger.error(
                 "Error reading and decoding access_token from OAuth response: %s" % data
             )
-            return helper.error(ERR_INVALID_RESPONSE)
+            return pipeline.error(ERR_INVALID_RESPONSE)
 
         try:
             id_token = data["id_token"]
